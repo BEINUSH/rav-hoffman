@@ -32,6 +32,9 @@ let state = {
   drawing:     false,
   lastX:       0,
   lastY:       0,
+  midX:        0,   // bezier midpoint
+  midY:        0,
+  currentSize: 16,  // dynamic width (velocity-based)
   startX:      0,
   startY:      0,
   rainbowHue:  0,
@@ -74,15 +77,12 @@ function getPos(e) {
   const rect = drawCanvas.getBoundingClientRect();
   const scaleX = CANVAS_W / rect.width;
   const scaleY = CANVAS_H / rect.height;
-  if (e.touches) {
-    return {
-      x: (e.touches[0].clientX - rect.left) * scaleX,
-      y: (e.touches[0].clientY - rect.top)  * scaleY,
-    };
-  }
+  const clientX = e.clientX ?? (e.touches?.[0]?.clientX ?? 0);
+  const clientY = e.clientY ?? (e.touches?.[0]?.clientY ?? 0);
   return {
-    x: (e.clientX - rect.left) * scaleX,
-    y: (e.clientY - rect.top)  * scaleY,
+    x:        (clientX - rect.left) * scaleX,
+    y:        (clientY - rect.top)  * scaleY,
+    pressure: e.pressure > 0 ? e.pressure : 0.5,  // stylus pressure, default 0.5
   };
 }
 
@@ -96,12 +96,32 @@ function setCtxStyle(context) {
   context.lineJoin           = 'round';
 }
 
-function drawFreehand(x, y) {
-  setCtxStyle(ctx);
+function drawFreehand(x, y, pressure) {
+  // Velocity-based width: slow → thick, fast → thin (like a real pen)
+  const dx    = x - state.lastX;
+  const dy    = y - state.lastY;
+  const speed = Math.sqrt(dx * dx + dy * dy);
+  const targetSize = Math.max(state.size * 0.3,
+                              state.size * (1.4 - Math.min(speed / 40, 1)));
+  // Smooth the size change so it doesn't jump
+  state.currentSize += (targetSize - state.currentSize) * 0.3;
+
+  // Quadratic bezier through midpoints → silky smooth curves
+  const midX = (state.lastX + x) / 2;
+  const midY = (state.lastY + y) / 2;
+
+  ctx.globalAlpha  = state.opacity;
+  ctx.strokeStyle  = state.color;
+  ctx.lineWidth    = state.currentSize * (pressure ?? 0.5) * 2;
+  ctx.lineCap      = 'round';
+  ctx.lineJoin     = 'round';
   ctx.beginPath();
-  ctx.moveTo(state.lastX, state.lastY);
-  ctx.lineTo(x, y);
+  ctx.moveTo(state.midX, state.midY);
+  ctx.quadraticCurveTo(state.lastX, state.lastY, midX, midY);
   ctx.stroke();
+
+  state.midX  = midX;
+  state.midY  = midY;
   state.lastX = x;
   state.lastY = y;
 }
@@ -154,15 +174,19 @@ function drawEraser(x, y) {
 
 function drawRainbow(x, y) {
   state.rainbowHue = (state.rainbowHue + 3) % 360;
+  const midX = (state.lastX + x) / 2;
+  const midY = (state.lastY + y) / 2;
   ctx.globalAlpha = state.opacity;
   ctx.strokeStyle = `hsl(${state.rainbowHue},100%,50%)`;
   ctx.lineWidth   = state.size;
   ctx.lineCap     = 'round';
   ctx.lineJoin    = 'round';
   ctx.beginPath();
-  ctx.moveTo(state.lastX, state.lastY);
-  ctx.lineTo(x, y);
+  ctx.moveTo(state.midX, state.midY);
+  ctx.quadraticCurveTo(state.lastX, state.lastY, midX, midY);
   ctx.stroke();
+  state.midX  = midX;
+  state.midY  = midY;
   state.lastX = x;
   state.lastY = y;
 }
@@ -325,12 +349,16 @@ function hexToRgba(hex, alpha) {
 // ─── Event handlers ───────────────────────────────────────────────────────────
 function onPointerDown(e) {
   e.preventDefault();
-  const {x, y} = getPos(e);
-  state.drawing = true;
-  state.lastX   = x;
-  state.lastY   = y;
-  state.startX  = x;
-  state.startY  = y;
+  const {x, y, pressure} = getPos(e);
+  if (e.pointerId !== undefined) canvasWrap.setPointerCapture(e.pointerId);
+  state.drawing     = true;
+  state.lastX       = x;
+  state.lastY       = y;
+  state.midX        = x;   // reset bezier anchor
+  state.midY        = y;
+  state.currentSize = state.size;
+  state.startX      = x;
+  state.startY      = y;
 
   saveState();
 
@@ -352,10 +380,10 @@ function onPointerDown(e) {
 function onPointerMove(e) {
   e.preventDefault();
   if (!state.drawing) return;
-  const {x, y} = getPos(e);
+  const {x, y, pressure} = getPos(e);
 
   switch (state.tool) {
-    case 'pencil':        drawFreehand(x, y);   break;
+    case 'pencil':        drawFreehand(x, y, pressure); break;
     case 'brush':         drawBrush(x, y);      break;
     case 'spray':         drawSpray(x, y);      break;
     case 'rainbow':       drawRainbow(x, y);    break;
@@ -384,19 +412,18 @@ function onPointerUp(e) {
   }
 }
 
-canvasWrap.addEventListener('mousedown',  onPointerDown);
-canvasWrap.addEventListener('mousemove',  onPointerMove);
-canvasWrap.addEventListener('mouseup',    onPointerUp);
-canvasWrap.addEventListener('mouseleave', onPointerUp);
-canvasWrap.addEventListener('touchstart', onPointerDown, {passive: false});
-canvasWrap.addEventListener('touchmove',  onPointerMove, {passive: false});
-canvasWrap.addEventListener('touchend',   onPointerUp);
+// Use Pointer Events (handles mouse, touch, and stylus with pressure)
+canvasWrap.addEventListener('pointerdown',   onPointerDown);
+canvasWrap.addEventListener('pointermove',   onPointerMove);
+canvasWrap.addEventListener('pointerup',     onPointerUp);
+canvasWrap.addEventListener('pointerleave',  onPointerUp);
+canvasWrap.addEventListener('pointercancel', onPointerUp);
 
 // Cursor style
-canvasWrap.addEventListener('mousemove', e => {
-  if (state.tool === 'fill') canvasWrap.style.cursor = 'cell';
+canvasWrap.addEventListener('pointermove', () => {
+  if      (state.tool === 'fill')   canvasWrap.style.cursor = 'cell';
   else if (state.tool === 'eraser') canvasWrap.style.cursor = 'cell';
-  else canvasWrap.style.cursor = 'crosshair';
+  else                              canvasWrap.style.cursor = 'crosshair';
 });
 
 // ─── Tool buttons ─────────────────────────────────────────────────────────────
