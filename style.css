@@ -246,7 +246,7 @@ input[type="range"] {
 }
 
 #drawing-canvas { z-index: 1; }
-#preview-canvas { z-index: 2; pointer-events: none; }
+#preview-canvas { z-index: 2; }
 
 /* ===== Notification ===== */
 #notification {
