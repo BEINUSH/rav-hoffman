@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🎨 סטודיו הציור שלי</title>
+  <title>🎨 הלוח של נועה</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
   <header>
-    <h1>🎨 סטודיו הציור שלי ✨</h1>
+    <h1>🎨 הלוח של נועה ✨</h1>
   </header>
 
   <div id="app">
@@ -20,14 +20,31 @@
       <section class="tool-group">
         <h3>כלים</h3>
         <div class="tools-grid">
-          <button class="tool-btn active" id="tool-pencil" title="עיפרון" data-tool="pencil">✏️</button>
-          <button class="tool-btn" id="tool-brush"  title="מברשת"  data-tool="brush">🖌️</button>
-          <button class="tool-btn" id="tool-spray"  title="ספריי"   data-tool="spray">💨</button>
-          <button class="tool-btn" id="tool-line"   title="קו ישר"  data-tool="line">📏</button>
-          <button class="tool-btn" id="tool-rect"   title="מלבן"    data-tool="rect">⬜</button>
-          <button class="tool-btn" id="tool-circle" title="עיגול"   data-tool="circle">⭕</button>
-          <button class="tool-btn" id="tool-fill"   title="מילוי"   data-tool="fill">🪣</button>
-          <button class="tool-btn" id="tool-eraser" title="מחק"     data-tool="eraser">🧹</button>
+          <button class="tool-btn active" id="tool-pencil"       title="עיפרון"       data-tool="pencil">✏️</button>
+          <button class="tool-btn" id="tool-brush"               title="מברשת"        data-tool="brush">🖌️</button>
+          <button class="tool-btn" id="tool-spray"               title="ספריי"         data-tool="spray">💨</button>
+          <button class="tool-btn" id="tool-rainbow"             title="קשת צבעים"    data-tool="rainbow">🌈</button>
+          <button class="tool-btn" id="tool-line"                title="קו ישר"        data-tool="line">📏</button>
+          <button class="tool-btn" id="tool-rect"                title="מלבן מסגרת"   data-tool="rect">⬜</button>
+          <button class="tool-btn" id="tool-filled-rect"         title="מלבן מלא"     data-tool="filled-rect">🟥</button>
+          <button class="tool-btn" id="tool-circle"              title="עיגול מסגרת"  data-tool="circle">⭕</button>
+          <button class="tool-btn" id="tool-filled-circle"       title="עיגול מלא"    data-tool="filled-circle">🔴</button>
+          <button class="tool-btn" id="tool-fill"                title="מילוי"         data-tool="fill">🪣</button>
+          <button class="tool-btn" id="tool-star"                title="כוכב"          data-tool="star">⭐</button>
+          <button class="tool-btn" id="tool-heart"               title="לב"            data-tool="heart">❤️</button>
+          <button class="tool-btn" id="tool-text"                title="כתב"           data-tool="text">🔤</button>
+          <button class="tool-btn eraser-btn" id="tool-eraser"   title="מחק"           data-tool="eraser">🧹</button>
+        </div>
+      </section>
+
+      <section class="tool-group">
+        <h3>גודל מהיר</h3>
+        <div class="size-presets">
+          <button class="size-btn" data-size="3">XS</button>
+          <button class="size-btn" data-size="8">S</button>
+          <button class="size-btn active" data-size="16">M</button>
+          <button class="size-btn" data-size="32">L</button>
+          <button class="size-btn" data-size="60">XL</button>
         </div>
       </section>
 
@@ -67,7 +84,7 @@
 
       <section class="tool-group">
         <h3>גודל מברשת</h3>
-        <input type="range" id="brush-size" min="1" max="80" value="8" />
+        <input type="range" id="brush-size" min="1" max="80" value="16" />
         <div id="brush-preview-wrap">
           <canvas id="brush-preview" width="80" height="80"></canvas>
         </div>
@@ -79,9 +96,15 @@
         <span id="opacity-label">100%</span>
       </section>
 
+      <section class="tool-group eraser-section">
+        <button id="btn-big-eraser" class="big-eraser-btn">🧹 מחק</button>
+      </section>
+
       <section class="tool-group actions">
-        <button id="btn-undo"  class="action-btn">↩️ בטל</button>
-        <button id="btn-redo"  class="action-btn">↪️ חזור</button>
+        <div class="undo-redo-row">
+          <button id="btn-undo"  class="action-btn half">↩️ בטל</button>
+          <button id="btn-redo"  class="action-btn half">↪️ חזור</button>
+        </div>
         <button id="btn-clear" class="action-btn danger">🗑️ נקה הכל</button>
         <button id="btn-save"  class="action-btn success">💾 שמור ציור</button>
         <button id="btn-bg"    class="action-btn">🖼️ צבע רקע</button>

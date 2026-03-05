@@ -25,15 +25,16 @@ initCanvas();
 
 // ─── State ───────────────────────────────────────────────────────────────────
 let state = {
-  tool:    'pencil',
-  color:   '#e74c3c',
-  size:    8,
-  opacity: 1,
-  drawing: false,
-  lastX:   0,
-  lastY:   0,
-  startX:  0,
-  startY:  0,
+  tool:        'pencil',
+  color:       '#e74c3c',
+  size:        16,
+  opacity:     1,
+  drawing:     false,
+  lastX:       0,
+  lastY:       0,
+  startX:      0,
+  startY:      0,
+  rainbowHue:  0,
 };
 
 const undoStack = [];
@@ -142,13 +143,81 @@ function drawSpray(x, y) {
 
 function drawEraser(x, y) {
   ctx.globalAlpha = 1;
-  ctx.globalCompositeOperation = 'destination-out';
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = '#ffffff';
   ctx.beginPath();
   ctx.arc(x, y, state.size * 1.5, 0, Math.PI * 2);
   ctx.fill();
-  ctx.globalCompositeOperation = 'source-over';
   state.lastX = x;
   state.lastY = y;
+}
+
+function drawRainbow(x, y) {
+  state.rainbowHue = (state.rainbowHue + 3) % 360;
+  ctx.globalAlpha = state.opacity;
+  ctx.strokeStyle = `hsl(${state.rainbowHue},100%,50%)`;
+  ctx.lineWidth   = state.size;
+  ctx.lineCap     = 'round';
+  ctx.lineJoin    = 'round';
+  ctx.beginPath();
+  ctx.moveTo(state.lastX, state.lastY);
+  ctx.lineTo(x, y);
+  ctx.stroke();
+  state.lastX = x;
+  state.lastY = y;
+}
+
+function drawStar(x, y) {
+  const spikes = 5;
+  const outerR = state.size * 3;
+  const innerR = outerR * 0.4;
+  setCtxStyle(ctx);
+  ctx.beginPath();
+  for (let i = 0; i < spikes * 2; i++) {
+    const r     = i % 2 === 0 ? outerR : innerR;
+    const angle = (i * Math.PI) / spikes - Math.PI / 2;
+    i === 0 ? ctx.moveTo(x + r * Math.cos(angle), y + r * Math.sin(angle))
+            : ctx.lineTo(x + r * Math.cos(angle), y + r * Math.sin(angle));
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawHeart(x, y) {
+  const s = state.size * 2.5;
+  setCtxStyle(ctx);
+  ctx.beginPath();
+  ctx.moveTo(x, y + s * 0.3);
+  ctx.bezierCurveTo(x, y - s * 0.3,  x - s, y - s * 0.3,  x - s, y + s * 0.2);
+  ctx.bezierCurveTo(x - s, y + s * 0.7, x, y + s,           x, y + s * 1.1);
+  ctx.bezierCurveTo(x, y + s,           x + s, y + s * 0.7, x + s, y + s * 0.2);
+  ctx.bezierCurveTo(x + s, y - s * 0.3, x, y - s * 0.3,    x, y + s * 0.3);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawText(x, y) {
+  const txt = prompt('הקלידי טקסט:');
+  if (!txt) return;
+  setCtxStyle(ctx);
+  ctx.font = `bold ${state.size * 3}px "Segoe UI", Arial, sans-serif`;
+  ctx.fillText(txt, x, y);
+}
+
+function drawFilledRect(x, y) {
+  setCtxStyle(ctx);
+  ctx.fillRect(state.startX, state.startY, x - state.startX, y - state.startY);
+}
+
+function drawFilledCircle(x, y) {
+  setCtxStyle(ctx);
+  const rx = (x - state.startX) / 2;
+  const ry = (y - state.startY) / 2;
+  const cx = state.startX + rx;
+  const cy = state.startY + ry;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, Math.abs(rx), Math.abs(ry), 0, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 // Preview shapes
@@ -265,11 +334,10 @@ function onPointerDown(e) {
 
   saveState();
 
-  if (state.tool === 'fill') {
-    floodFill(x, y, state.color);
-    state.drawing = false;
-    return;
-  }
+  if (state.tool === 'fill') { floodFill(x, y, state.color); state.drawing = false; return; }
+  if (state.tool === 'star')  { drawStar(x, y);  state.drawing = false; return; }
+  if (state.tool === 'heart') { drawHeart(x, y); state.drawing = false; return; }
+  if (state.tool === 'text')  { drawText(x, y);  state.drawing = false; return; }
 
   // Single dot for pencil/brush
   if (state.tool === 'pencil') {
@@ -287,13 +355,16 @@ function onPointerMove(e) {
   const {x, y} = getPos(e);
 
   switch (state.tool) {
-    case 'pencil': drawFreehand(x, y); break;
-    case 'brush':  drawBrush(x, y);   break;
-    case 'spray':  drawSpray(x, y);   break;
-    case 'eraser': drawEraser(x, y);  break;
-    case 'line':   previewLine(x, y); break;
-    case 'rect':   previewRect(x, y); break;
-    case 'circle': previewCircle(x, y); break;
+    case 'pencil':        drawFreehand(x, y);   break;
+    case 'brush':         drawBrush(x, y);      break;
+    case 'spray':         drawSpray(x, y);      break;
+    case 'rainbow':       drawRainbow(x, y);    break;
+    case 'eraser':        drawEraser(x, y);     break;
+    case 'line':          previewLine(x, y);    break;
+    case 'rect':          previewRect(x, y);    break;
+    case 'circle':        previewCircle(x, y);  break;
+    case 'filled-rect':   previewRect(x, y);    break;
+    case 'filled-circle': previewCircle(x, y);  break;
   }
 }
 
@@ -305,9 +376,11 @@ function onPointerUp(e) {
   pCtx.clearRect(0, 0, CANVAS_W, CANVAS_H);
 
   switch (state.tool) {
-    case 'line':   commitLine(x, y);   break;
-    case 'rect':   commitRect(x, y);   break;
-    case 'circle': commitCircle(x, y); break;
+    case 'line':          commitLine(x, y);        break;
+    case 'rect':          commitRect(x, y);         break;
+    case 'circle':        commitCircle(x, y);       break;
+    case 'filled-rect':   drawFilledRect(x, y);     break;
+    case 'filled-circle': drawFilledCircle(x, y);   break;
   }
 }
 
@@ -358,6 +431,27 @@ colorPicker.addEventListener('input', () => setColor(colorPicker.value));
 
 // init
 setColor(state.color);
+
+// ─── Big eraser button ────────────────────────────────────────────────────────
+document.getElementById('btn-big-eraser').addEventListener('click', () => {
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tool-eraser').classList.add('active');
+  state.tool = 'eraser';
+  state.size = 32;
+  brushSize.value = 32;
+  updateBrushPreview();
+});
+
+// ─── Size presets ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.size-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.size = parseInt(btn.dataset.size);
+    brushSize.value = state.size;
+    updateBrushPreview();
+  });
+});
 
 // ─── Brush size ───────────────────────────────────────────────────────────────
 const brushSize    = document.getElementById('brush-size');

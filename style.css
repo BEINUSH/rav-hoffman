@@ -54,7 +54,7 @@ header h1 {
 
 /* ===== Toolbar ===== */
 #toolbar {
-  width: 210px;
+  width: 230px;
   flex-shrink: 0;
   background: var(--panel-bg);
   border-left: 3px solid var(--panel-border);
@@ -86,7 +86,13 @@ header h1 {
 .tools-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 5px;
+  gap: 4px;
+}
+
+.eraser-btn {
+  grid-column: span 2;
+  background: #fff0f5;
+  border-color: #ffb3cc;
 }
 
 .tool-btn {
@@ -270,6 +276,69 @@ input[type="range"] {
 #notification.show {
   transform: translateX(-50%) translateY(0);
   opacity: 1;
+}
+
+/* ===== Eraser section ===== */
+.eraser-section {
+  padding: 8px;
+}
+
+.big-eraser-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #ff6b9d, #ff9a3c);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255,107,157,.4);
+  transition: all .15s;
+  letter-spacing: .03em;
+}
+
+.big-eraser-btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 6px 18px rgba(255,107,157,.6);
+}
+
+/* ===== Size presets ===== */
+.size-presets {
+  display: flex;
+  gap: 4px;
+  justify-content: space-between;
+}
+
+.size-btn {
+  flex: 1;
+  padding: 6px 2px;
+  background: #f8f0ff;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  font-size: .72rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #888;
+  transition: all .15s;
+}
+
+.size-btn:hover  { background: #ecd6ff; color: var(--accent); }
+.size-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: #9a00cc;
+}
+
+/* ===== Undo/Redo row ===== */
+.undo-redo-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 0;
+}
+
+.action-btn.half {
+  flex: 1;
 }
 
 /* ===== Scrollbar ===== */
