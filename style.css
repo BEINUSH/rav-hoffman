@@ -245,8 +245,8 @@ input[type="range"] {
   box-shadow: 4px 4px 20px rgba(0,0,0,.2);
 }
 
-#drawing-canvas { z-index: 1; }
-#preview-canvas { z-index: 2; }
+#drawing-canvas { z-index: 1; pointer-events: none; }
+#preview-canvas { z-index: 2; pointer-events: none; }
 
 /* ===== Notification ===== */
 #notification {

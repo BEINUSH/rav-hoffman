@@ -311,19 +311,19 @@ function onPointerUp(e) {
   }
 }
 
-previewCanvas.addEventListener('mousedown',  onPointerDown);
-previewCanvas.addEventListener('mousemove',  onPointerMove);
-previewCanvas.addEventListener('mouseup',    onPointerUp);
-previewCanvas.addEventListener('mouseleave', onPointerUp);
-previewCanvas.addEventListener('touchstart', onPointerDown, {passive: false});
-previewCanvas.addEventListener('touchmove',  onPointerMove, {passive: false});
-previewCanvas.addEventListener('touchend',   onPointerUp);
+canvasWrap.addEventListener('mousedown',  onPointerDown);
+canvasWrap.addEventListener('mousemove',  onPointerMove);
+canvasWrap.addEventListener('mouseup',    onPointerUp);
+canvasWrap.addEventListener('mouseleave', onPointerUp);
+canvasWrap.addEventListener('touchstart', onPointerDown, {passive: false});
+canvasWrap.addEventListener('touchmove',  onPointerMove, {passive: false});
+canvasWrap.addEventListener('touchend',   onPointerUp);
 
 // Cursor style
-previewCanvas.addEventListener('mousemove', e => {
-  if (state.tool === 'fill') previewCanvas.style.cursor = 'cell';
-  else if (state.tool === 'eraser') previewCanvas.style.cursor = 'cell';
-  else previewCanvas.style.cursor = 'crosshair';
+canvasWrap.addEventListener('mousemove', e => {
+  if (state.tool === 'fill') canvasWrap.style.cursor = 'cell';
+  else if (state.tool === 'eraser') canvasWrap.style.cursor = 'cell';
+  else canvasWrap.style.cursor = 'crosshair';
 });
 
 // ─── Tool buttons ─────────────────────────────────────────────────────────────
